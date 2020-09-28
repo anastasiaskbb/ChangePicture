@@ -1,0 +1,10 @@
+C:\Users\Anastasia\source\repos\lab1MT\lab1MT\bin\Debug\lab1MT.exe.config
+C:\Users\Anastasia\source\repos\lab1MT\lab1MT\bin\Debug\lab1MT.exe
+C:\Users\Anastasia\source\repos\lab1MT\lab1MT\bin\Debug\lab1MT.pdb
+C:\Users\Anastasia\source\repos\lab1MT\lab1MT\obj\Debug\lab1MT.csprojAssemblyReference.cache
+C:\Users\Anastasia\source\repos\lab1MT\lab1MT\obj\Debug\lab1MT.Form1.resources
+C:\Users\Anastasia\source\repos\lab1MT\lab1MT\obj\Debug\lab1MT.Properties.Resources.resources
+C:\Users\Anastasia\source\repos\lab1MT\lab1MT\obj\Debug\lab1MT.csproj.GenerateResource.cache
+C:\Users\Anastasia\source\repos\lab1MT\lab1MT\obj\Debug\lab1MT.csproj.CoreCompileInputs.cache
+C:\Users\Anastasia\source\repos\lab1MT\lab1MT\obj\Debug\lab1MT.exe
+C:\Users\Anastasia\source\repos\lab1MT\lab1MT\obj\Debug\lab1MT.pdb
