@@ -8,7 +8,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
 namespace lab1MT
 {
     public partial class Form1 : Form
@@ -23,15 +22,16 @@ namespace lab1MT
             public byte Blue;
             public byte Green;
             public byte Red;
+            public byte Alpha;
         }
 
-            private void openToolStripMenuItem_Click(object sender, EventArgs e)
+        private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog files = new OpenFileDialog();
-            files.Filter = "Image Files(*.BMP; *.JPG; *.GIF; *.PNG)| *.BMP; *.JPG; *.GIF; *.PNG | All files(*.*) | *.* ";
-            if(files.ShowDialog()==DialogResult.OK)
+            files.Filter = "Image Files(*.JPG)| *.JPG;| All files(*.*) | *.* ";
+            if (files.ShowDialog() == DialogResult.OK)
             {
-                try 
+                try
                 {
                     pictureBox1.Image = new Bitmap(files.FileName);
                 }
@@ -44,16 +44,24 @@ namespace lab1MT
 
         private void saveUsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if(pictureBox1.Image!=null)
+            if (pictureBox1.Image != null)
             {
                 SaveFileDialog files = new SaveFileDialog();
-                files.Filter = "Image Files(*.BMP; *.JPG; *.GIF; *.PNG)| *.BMP; *.JPG; *.GIF; *.PNG | All files(*.*) | *.* ";
+                files.Filter = "Image Files(*.JPG)| *.JPG;| All files(*.*) | *.* ";
 
-                if(files.ShowDialog() == DialogResult.OK)
+                if (files.ShowDialog() == DialogResult.OK)
                 {
                     try
                     {
-                        pictureBox1.Image.Save(files.FileName);
+                        //Получаем кодировщик
+                        ImageCodecInfo jpgEncoder = GetEncoder(ImageFormat.Jpeg);
+                        System.Drawing.Imaging.Encoder myEncoder = System.Drawing.Imaging.Encoder.Quality;
+                        //Создаем параметры компрессии
+                        EncoderParameters myEncoderParameters = new EncoderParameters(1);
+                        var myEncoderParameter = new EncoderParameter(myEncoder, 100L); //тут задаем уровень компрессии
+                        myEncoderParameters.Param[0] = myEncoderParameter;
+                        //Сохраняем передавая в функцию кодировщик и его параметры
+                        pictureBox1.Image.Save(files.FileName, jpgEncoder, myEncoderParameters);
                     }
                     catch
                     {
@@ -63,40 +71,49 @@ namespace lab1MT
             }
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void buttonChange_Click(object sender, EventArgs e)
         {
             Bitmap Image = new Bitmap(pictureBox1.Image);
-            Bitmap ResultImage = new Bitmap(Image.Width, Image.Height);
             unsafe
             {
-                var oneBits = Image.LockBits(new Rectangle(0, 0, Image.Width, Image.Height), ImageLockMode.ReadOnly, Image.PixelFormat);
-                var twoBits = ResultImage.LockBits(new Rectangle(0, 0, ResultImage.Width, ResultImage.Height), ImageLockMode.WriteOnly, ResultImage.PixelFormat);
-                int padding = twoBits.Stride - (ResultImage.Width * sizeof(Pixel));
-                int width = ResultImage.Width;
-                int height = ResultImage.Height;
-                Parallel.For(0, Image.Width * Image.Height, i =>
-                {
+                //Блокируем изображение
+                var oneBits = Image.LockBits(new Rectangle(0, 0, Image.Width, Image.Height), ImageLockMode.ReadWrite, Image.PixelFormat);
+
+                //Параллельным For циклом перебираем указатели
+                Parallel.For(0, Image.Width * Image.Height, i => {
+                    //Получаем указатель на текущий пиксель
                     Pixel* pxOne = (Pixel*)((byte*)oneBits.Scan0 + i * sizeof(Pixel));
-                    byte* ptr = (byte*)twoBits.Scan0;
-                    for (int j = 0; j < height; j++)
-                    {
-                        for(int k = 0; k < width; k++) 
-                        {
-                            
-                            Pixel* pxTwo = (Pixel*)((byte*)twoBits.Scan0 + i * sizeof(Pixel));
-                            pxOne->Red = pxTwo->Green;
-                            pxOne->Green = pxTwo->Blue;
-                            pxOne->Blue = pxTwo->Red;
-                            ptr += sizeof(Pixel);
-                        }
-                        ptr += padding;
-                    }
+
+                    //Меняем потоки
+                    var tempRed = pxOne->Red;
+                    pxOne->Red = pxOne->Green;
+                    pxOne->Green = pxOne->Blue;
+                    pxOne->Blue = tempRed;
+
+
                 });
+
+                //Разблокируем изображение
                 Image.UnlockBits(oneBits);
-                ResultImage.UnlockBits(twoBits);
-                pictureBox1.Image = ResultImage;
+                //Устанавливаем изображение в pictureBox
+                pictureBox1.Image = Image;
 
             }
         }
+
+        //Функция для получения кодировщика
+        private ImageCodecInfo GetEncoder(ImageFormat format)
+        {
+            ImageCodecInfo[] codecs = ImageCodecInfo.GetImageDecoders();
+            foreach (ImageCodecInfo codec in codecs)
+            {
+                if (codec.FormatID == format.Guid)
+                {
+                    return codec;
+                }
+            }
+            return null;
+        }
+
     }
 }
